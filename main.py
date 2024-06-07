@@ -10,13 +10,13 @@ from main_evaluator import evaluate_hand, compare_hands
 
 # Function to check the status of players
 def check_player_status():
-    if player1.in_game == False and player2.in_game == False:
+    if not player1.in_game and not player2.in_game:
         print("Both players folded. Game over.")
         exit()
-    elif player1.in_game == False:
+    elif not player1.in_game:
         print("Player 1 folded. Player 2 wins!")
         exit()
-    elif player2.in_game == False:
+    elif not player2.in_game:
         print("Player 2 folded. Player 1 wins!")
         exit()
 
@@ -30,7 +30,10 @@ dealer = Dealer()
 preflop = PreFlop(dealer, [player1, player2])
 print(player1)
 print(player2)
-betting_round1 = BettingRound([player1, player2])
+print(pot)
+
+# First betting round
+betting_round1 = BettingRound([player1, player2], pot)
 betting_round1.round()
 check_player_status()
 print(pot)
@@ -38,21 +41,21 @@ print(pot)
 # Add community cards and display after each stage
 flop = Flop(dealer)
 print(dealer.community_cards)
-betting_round2 = BettingRound([player1, player2])
+betting_round2 = BettingRound([player1, player2], pot)
 betting_round2.round()
 check_player_status()
 print(pot)
 
 turn = Turn(dealer)
 print(dealer.community_cards)
-betting_round3 = BettingRound([player1, player2])
+betting_round3 = BettingRound([player1, player2], pot)
 betting_round3.round()
 check_player_status()
 print(pot)
 
 river = River(dealer)
 print(dealer.community_cards)
-betting_round4 = BettingRound([player1, player2])
+betting_round4 = BettingRound([player1, player2], pot)
 betting_round4.round()
 check_player_status()
 print(pot)
