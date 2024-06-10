@@ -7,6 +7,7 @@ class Player:
         self.chips = chips
         self.hand = Hand()
         self.in_game = True
+        self.status = None
         self.current_bet = 0
 
     def __repr__(self):
@@ -33,3 +34,6 @@ class Player:
         
     def check(self):
         pass
+
+    def status(self):
+        return self.status
