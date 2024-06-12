@@ -37,10 +37,12 @@ class Party:
         self.betting_round()
         self.check_player_status()
 
-        # Evaluate players' hands and display
+        
+        # Compare players' hands and display the winner and thhe pot and the cards
         self.evaluate_hands()
-        # Compare players' hands and display the winner
         self.compare_hands()
+        print(self.pot)
+        
     
     def display_hands(self):
         for player in self.players:
@@ -69,17 +71,6 @@ class Party:
             print(f"{player.name}'s hand: {eval_hand[1]} ({eval_hand[0]})")
 
     def compare_hands(self):
-        best_player = None
-        best_hand = None
-
-        for player in self.players:
-            if player.in_game:
-                current_hand = evaluate_hand(player.hand.cards, self.dealer.community_cards.cards)
-                if not best_hand or compare_hands(current_hand, best_hand) > 0:
-                    best_hand = current_hand
-                    best_player = player
-
-        if best_player:
-            print(f"{best_player.name} wins!")
-        else:
-            print("It's a tie!")
+        player1, player2 = self.players
+        winner = compare_hands(player1, player2, self.dealer.community_cards.cards)
+        print(f"{winner.name} wins!")

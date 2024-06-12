@@ -73,10 +73,9 @@ def evaluate_hand(hand_cards, community_cards):
     # High card
     return "high card", sorted_cards[:5]
 
-# Function to compare players' hands
 def compare_hands(player1, player2, community_cards):
-    eval1 = evaluate_hand(player1.hand.cards, community_cards.cards)
-    eval2 = evaluate_hand(player2.hand.cards, community_cards.cards)
+    eval1 = evaluate_hand(player1.hand.cards, community_cards)
+    eval2 = evaluate_hand(player2.hand.cards, community_cards)
 
     if eval1[0] > eval2[0]:
         return player1
@@ -91,8 +90,8 @@ def compare_hands(player1, player2, community_cards):
                 return player2
 
         # If the cards are identical, compare the kickers
-        kickers1 = [card.rank for card in player1.hand.cards + community_cards.cards if card not in eval1[1]]
-        kickers2 = [card.rank for card in player2.hand.cards + community_cards.cards if card not in eval2[1]]
+        kickers1 = [card.rank for card in player1.hand.cards + community_cards if card not in eval1[1]]
+        kickers2 = [card.rank for card in player2.hand.cards + community_cards if card not in eval2[1]]
         for kicker1, kicker2 in zip(sorted(kickers1, reverse=True), sorted(kickers2, reverse=True)):
             if kicker1 > kicker2:
                 return player1
@@ -100,4 +99,4 @@ def compare_hands(player1, player2, community_cards):
                 return player2
 
         # If the kickers are also identical, it's a tie
-        return "Tie"
+        return None
