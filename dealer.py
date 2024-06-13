@@ -1,5 +1,5 @@
-from deck import Deck
-from community_cards import CommunityCards
+from Cards.deck import Deck
+from Cards.community_cards import CommunityCards
 from pot import Pot
 
 # Definition of the Dealer class

@@ -1,12 +1,12 @@
-from player import Player
+from Players.player import Player
 from dealer import Dealer
 from pot import Pot
-from pre_flop import PreFlop
-from flop import Flop
-from turn import Turn
-from river import River
-from betting_round import BettingRound
-from main_evaluator import evaluate_hand, compare_hands
+from Rounds.pre_flop import PreFlop
+from Rounds.flop import Flop
+from Rounds.turn import Turn
+from Rounds.river import River
+from Actions.betting_round import BettingRound
+from Actions.main_evaluator import evaluate_hand, compare_hands
 
 class Party:
     def __init__(self, player_names, initial_stack=1000):
