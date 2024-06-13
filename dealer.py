@@ -1,4 +1,4 @@
-from deck import Deck
+from Cards.deck import Deck
 from community_cards import CommunityCards
 from pot import Pot
 

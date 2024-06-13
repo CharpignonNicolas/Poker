@@ -1,4 +1,4 @@
-from card import Card
+from Cards.card import Card
 
 # Function to evaluate a player's hand
 def evaluate_hand(hand_cards, community_cards):
