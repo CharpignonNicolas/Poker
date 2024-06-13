@@ -1,12 +1,12 @@
-from player import Player
+from Players.player import Player
 from dealer import Dealer
 from pot import Pot
-from pre_flop import PreFlop
-from flop import Flop
-from turn import Turn
-from river import River
-from betting_round import BettingRound
-from main_evaluator import evaluate_hand, compare_hands
+from Rounds.pre_flop import PreFlop
+from Rounds.flop import Flop
+from Rounds.turn import Turn
+from Rounds.river import River
+from Actions.betting_round import BettingRound
+from Actions.main_evaluator import evaluate_hand, compare_hands
 
 class Party:
     def __init__(self, player_names, initial_stack=1000):
@@ -17,22 +17,26 @@ class Party:
     def start(self):
         # Deal preflop cards and display players' hands
         preflop = PreFlop(self.dealer, self.players)
+        print("Preflop")
         self.display_hands()
         self.betting_round()
         self.check_player_status()
 
         # Add community cards and display after each stage
         flop = Flop(self.dealer)
+        print("Flop")
         self.display_community_cards()
         self.betting_round()
         self.check_player_status()
 
         turn = Turn(self.dealer)
+        print("Turn")
         self.display_community_cards()
         self.betting_round()
         self.check_player_status()
 
         river = River(self.dealer)
+        print("River")
         self.display_community_cards()
         self.betting_round()
         self.check_player_status()
@@ -41,7 +45,6 @@ class Party:
         # Compare players' hands and display the winner and thhe pot and the cards
         self.evaluate_hands()
         self.compare_hands()
-        print(self.pot)
         
     
     def display_hands(self):
@@ -73,4 +76,5 @@ class Party:
     def compare_hands(self):
         player1, player2 = self.players
         winner = compare_hands(player1, player2, self.dealer.community_cards.cards)
+        winner.chips += self.pot.amount
         print(f"{winner.name} wins!")
