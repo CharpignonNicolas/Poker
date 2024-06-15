@@ -45,6 +45,8 @@ class Party:
         # Compare players' hands and display the winner and thhe pot and the cards
         self.evaluate_hands()
         self.compare_hands()
+        if player.chips == 0 :
+            exit()
         
     
     def display_hands(self):
