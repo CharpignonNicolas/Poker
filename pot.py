@@ -5,7 +5,8 @@ class Pot:
 
     def add(self, amount):
         self.amount += amount
-        print(f"Added {amount} to the pot")
+        print(f"\n{amount} ajoutés au pot.")
+        print (f"Total Pot: {self.amount}\n")
 
     def reset(self):
         self.amount = 0

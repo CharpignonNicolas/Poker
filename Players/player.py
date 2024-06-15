@@ -11,14 +11,14 @@ class Player:
         self.current_bet = 0
 
     def __repr__(self):
-        return f"{self.name} - Hand: {self.hand}, Chips: {self.chips}"
+        return f"{self.name} - Main: {self.hand}, Jetons: {self.chips}"
 
     def bet(self, amount):
         if amount <= self.chips:
             self.chips -= amount
             self.current_bet += amount
         else:
-            raise ValueError("Not enough chips to bet this amount.")
+            raise ValueError("Pas assez de jetons pour miser cette somme.")
 
     def call(self, amount):
         self.bet(amount)
