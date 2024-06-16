@@ -8,3 +8,7 @@ class PreFlop:
     def deal_cards(self):
         for player in self.players:
             self.dealer.deal(player, 2)
+
+    def display_hands(self):
+        for player in self.players:
+            print(player)

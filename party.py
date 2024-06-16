@@ -7,45 +7,50 @@ from Rounds.turn import Turn
 from Rounds.river import River
 from Actions.betting_round import BettingRound
 from Actions.main_evaluator import evaluate_hand, compare_hands
+from Cards.card import Card
 
 class Party:
     def __init__(self, player_names, initial_stack=1000):
         self.players = [Player(name, initial_stack) for name in player_names]
         self.pot = Pot()
         self.dealer = Dealer()
+        self.stage = "preflop"
     
     def start(self):
-        # Deal preflop cards and display players' hands
         preflop = PreFlop(self.dealer, self.players)
         print("Preflop")
         self.display_hands()
-        self.betting_round()
-        self.check_player_status()
-
-        # Add community cards and display after each stage
-        flop = Flop(self.dealer)
-        print("Flop")
-        self.display_community_cards()
-        self.betting_round()
-        self.check_player_status()
-
-        turn = Turn(self.dealer)
-        print("Turn")
-        self.display_community_cards()
-        self.betting_round()
-        self.check_player_status()
-
-        river = River(self.dealer)
-        print("River")
-        self.display_community_cards()
-        self.betting_round()
-        self.check_player_status()
-
-        
-        # Compare players' hands and display the winner and thhe pot and the cards
-        self.evaluate_hands()
-        self.compare_hands()
-        
+    
+    def next_stage(self):
+        if self.stage == "preflop":
+            self.betting_round()
+            self.check_player_status()
+            self.stage = "flop"
+            flop = Flop(self.dealer)
+            print("Flop")
+        elif self.stage == "flop":
+            self.display_community_cards()
+            self.betting_round()
+            self.check_player_status()
+            self.stage = "turn"
+            turn = Turn(self.dealer)
+            print("Turn")
+        elif self.stage == "turn":
+            self.display_community_cards()
+            self.betting_round()
+            self.check_player_status()
+            self.stage = "river"
+            river = River(self.dealer)
+            print("River")
+        elif self.stage == "river":
+            self.display_community_cards()
+            self.betting_round()
+            self.check_player_status()
+            self.stage = "showdown"
+        elif self.stage == "showdown":
+            self.evaluate_hands()
+            self.compare_hands()
+            self.stage = "end"
     
     def display_hands(self):
         for player in self.players:
