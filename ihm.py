@@ -48,9 +48,9 @@ while running:
     screen.fill(GREEN)
 
     # Avancer dans les étapes du jeu
-    if time.time() - stage_time > stage_duration:
+    """if time.time() - stage_time > stage_duration:
         game.next_stage()
-        stage_time = time.time()
+        stage_time = time.time()"""
 
     # Afficher les cartes des joueurs
     for player_index, hand_images in enumerate(player_card_images):
