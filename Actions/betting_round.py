@@ -1,22 +1,29 @@
 import pygame
 from buttons import Button
+from inputBox import InputBox
 from pot import Pot
 
 class BettingRound:
-    def __init__(self, players, pot, screen, font, buttons, initial_bet=0):
+    def __init__(self, players, pot, screen, font, buttons, inputBox, initial_bet=0):
         self.players = players
         self.pot = pot
         self.current_bet = initial_bet
         self.screen = screen
         self.font = font
         self.buttons = buttons
+        self.inputBox = inputBox
 
-    def handle_bet_event(self, player):
-        amount = int(input("Enter the bet amount: "))  # Replace with your input method
+    def handle_bet_event(self, player, amount):
         player.bet(amount)
         self.current_bet = amount
         self.pot.add(amount)
         player.status = "bet"
+
+    def handle_raise_event(self, player, amount):
+        player.raise_bet(self.current_bet + amount)
+        self.pot.add(self.current_bet + amount)
+        self.current_bet += amount
+        player.status = "raise"
 
     def handle_call_event(self, player):
         player.call(self.current_bet)
@@ -28,11 +35,8 @@ class BettingRound:
             for button in self.buttons:
                 if button.is_clicked(event):
                     if button.text == "Raise":
-                        amount = int(input("Enter the raise amount: "))  # Replace with your input method
-                        player.raise_bet(self.current_bet + amount)
-                        self.pot.add(self.current_bet + amount)
-                        self.current_bet += amount
-                        player.status = "raise"
+                        amount = self.get_input_box_value("Raise")
+                        self.handle_raise_event(player, amount)
                     elif button.text == "Check":
                         player.check()
                         player.status = "check"
@@ -40,16 +44,31 @@ class BettingRound:
                         player.fold()
                         player.status = "fold"
                     elif button.text == "Bet":
-                        self.handle_bet_event(player)
+                        amount = self.get_input_box_value("Bet")
+                        self.handle_bet_event(player, amount)
                     elif button.text == "Call":
                         self.handle_call_event(player)
                     return True
         return False
 
+    def handle_input_boxes_event(self, event):
+        for box in self.inputBox:
+            box.handle_event(event)
+
+    def get_input_box_value(self, action):
+        for box in self.inputBox:
+            if box.action == action:
+                return int(box.text) if box.text.isdigit() else 0
+        return 0
+
     def draw_current_player(self, player):
         # Draw the current player's name on the screen
         player_text = self.font.render(f"Current Player: {player.name}", True, (255, 255, 255))
         self.screen.blit(player_text, (10, 10))
+
+    def update_buttons_and_inputs(self, actions):
+        self.buttons = [button for button in self.buttons if button.text in actions]
+        self.inputBox = [box for box in self.inputBox if box.action in actions]
 
     def round(self):
         for player in self.players:
@@ -62,12 +81,15 @@ class BettingRound:
                         pygame.quit()
                         exit()
                     action_taken = self.handle_buttons_event(event, player)
+                    self.handle_input_boxes_event(event)
 
-                # Draw buttons and current player
+                # Draw buttons, input boxes, and current player
                 self.screen.fill((0, 105, 0))
                 self.draw_current_player(player)
                 for button in self.buttons:
                     button.draw(self.screen, self.font)
+                for box in self.inputBox:
+                    box.draw(self.screen)
                 pygame.display.flip()
 
             if self.check_player_status():
