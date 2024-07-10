@@ -6,36 +6,28 @@ class InputBox:
         self.rect = pygame.Rect(x, y, width, height)
         self.color = (255, 255, 255)
         self.text = text
-        self.txt_surface = pygame.font.Font(None, 32).render(text, True, self.color)
-        self.active = False
+        self.font = pygame.font.Font(None, 32)
 
     def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            # If the user clicked on the input_box rect.
-            if self.rect.collidepoint(event.pos):
-                self.active = not self.active
-            else:
-                self.active = False
-            self.color = (0, 0, 255) if self.active else (255, 255, 255)
         if event.type == pygame.KEYDOWN:
-            if self.active:
-                if event.key == pygame.K_RETURN:
-                    print(self.text)
-                    self.text = ''
-                elif event.key == pygame.K_BACKSPACE:
-                    self.text = self.text[:-1]
-                else:
-                    self.text += event.unicode
-                # Re-render the text.
-                self.txt_surface = pygame.font.Font(None, 32).render(self.text, True, self.color)
+            if event.key == pygame.K_RETURN:
+                return self.get_action()
+            elif event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            else:
+                self.text += event.unicode
+
+    def get_action(self):
+        action = self.text.split()[0].lower()  # Get the first word as action
+        amount_str = self.text.split()[1] if len(self.text.split()) > 1 else '0'
+        amount = int(amount_str) if amount_str.isdigit() else 0
+        return action, amount
 
     def update(self):
-        # Resize the box if the text is too long.
-        width = max(200, self.txt_surface.get_width()+10)
+        width = max(200, self.font.size(self.text)[0] + 10)
         self.rect.w = width
 
     def draw(self, screen):
-        # Blit the text.
-        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
-        # Blit the rect.
         pygame.draw.rect(screen, self.color, self.rect, 2)
+        text_surface = self.font.render(self.text, True, (0, 0, 0))
+        screen.blit(text_surface, (self.rect.x + 5, self.rect.y + 5))

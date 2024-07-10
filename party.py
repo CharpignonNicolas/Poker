@@ -11,16 +11,14 @@ from Cards.card import Card
 import pygame
 
 class Party:
-    def __init__(self, player_names, screen, font, buttons, inputBox, initial_stack=1000):
+    def __init__(self, player_names, screen, font, initial_stack=1000):
         self.players = [Player(name, initial_stack) for name in player_names]
         self.pot = Pot()
         self.screen = screen
         self.font = font
-        self.buttons = buttons
-        self.inputBox = inputBox
         self.dealer = Dealer()
         self.stage = "preflop"
-        self.betting_round = BettingRound(self.players, self.pot, self.screen, self.font, self.buttons, self.inputBox)
+        self.betting_round = BettingRound(self.players, self.pot, self.screen, self.font)
         print(f"Screen: {self.screen}, Font: {self.font}")  # Debugging line
 
     def start(self):
@@ -35,14 +33,26 @@ class Party:
         self.display_hands()
         self.betting_round.round()  
 
+        turn = Turn(self.dealer)
+        print("Turn")
+        self.display_community_cards()
+        self.display_hands()
+        self.betting_round.round()
+
+        river = River(self.dealer)
+        print("River")
+        self.display_community_cards()
+        self.display_hands()
+        self.betting_round.round()
+
     def handle_event(self, event):
         self.betting_round.handle_buttons_event(event)
+        self.betting_round.handle_input_boxes_event(event)
 
     def display_hands(self):
         for player in self.players:
             print(player)
         print(self.pot)
-
         
     def display_community_cards(self):
         print(self.dealer.community_cards)
