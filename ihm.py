@@ -50,6 +50,6 @@ class PokerGame:
         pygame.quit()
         sys.exit()
 
-if __name__ == "__main__":
-    game = PokerGame()
-    game.run()
+
+game = PokerGame()
+game.run()

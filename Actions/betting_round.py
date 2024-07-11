@@ -23,7 +23,7 @@ class BettingRound:
             return True
 
         # Si un joueur a misé ou relancé
-        if any(player.status in ["bet", "raise"] for player in self.players if player.in_game):
+        """if any(player.status in ["bet", "raise"] for player in self.players if player.in_game):
             for player in self.players:
                 if player.status in ["call", "raise", "fold"]:
                     continue  # Passer les joueurs qui ont déjà pris une action appropriée
@@ -48,7 +48,7 @@ class BettingRound:
                                 raise ValueError("Invalid action.")
                     return False
 
-        return False
+        return False"""
 
     def round(self):
         for player in self.players:
