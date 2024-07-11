@@ -15,10 +15,12 @@ font = pygame.font.Font(None, 36)
 class InputBox:
     def __init__(self, x, y, width, height, text='', action=''):
         self.rect = pygame.Rect(x, y, width, height)
-        self.color = pygame.Color('white')
+        self.color_inactive = pygame.Color('white')
+        self.color_active = pygame.Color('yellow')
+        self.color = self.color_inactive
         self.text = text
         self.action = action
-        self.txt_surface = font.render(text, True, self.color)
+        self.txt_surface = font.render(text, True, pygame.Color('black'))
         self.active = False
 
     def handle_event(self, event):
@@ -27,7 +29,7 @@ class InputBox:
                 self.active = not self.active
             else:
                 self.active = False
-            self.color = pygame.Color('yellow') if self.active else pygame.Color('white')
+            self.color = self.color_active if self.active else self.color_inactive
         if event.type == pygame.KEYDOWN:
             if self.active:
                 if event.key == pygame.K_RETURN:
@@ -36,8 +38,8 @@ class InputBox:
                     self.text = self.text[:-1]
                 else:
                     self.text += event.unicode
-                self.txt_surface = font.render(self.text, True, self.color)
-
+                self.txt_surface = font.render(self.text, True, pygame.Color('black'))
+    
     def update(self):
         width = max(200, self.txt_surface.get_width() + 10)
         self.rect.w = width
@@ -125,47 +127,84 @@ class BettingRound:
             return True
 
         return False
-
+    
     def round(self):
         for player in self.players:
             if not player.in_game:
                 continue
-            action, amount = get_user_action()
-            if action == "bet":
-                amount = int(amount)
-                player.bet(amount)
-                self.current_bet = amount
-                self.pot.add(amount)
-                player.status = "bet"
-                break
-            elif action == "check":
-                player.check()
-                player.status = "check"
-            elif action == "fold":
-                player.fold()
-                player.status = "fold"
-            elif action == "call":
-                player.call(self.current_bet)
-                self.pot.add(self.current_bet)
-                player.status = "call"
-            elif action == "raise":
-                amount = int(amount)
-                player.raise_bet(self.current_bet + amount)
-                self.pot.add(self.current_bet + amount)
-                self.current_bet += amount
-                player.status = "raise"
-            else:
-                raise ValueError("Invalid action.")
+            while True:
+                action, amount = get_user_action()
+                try:
+                    if action == "bet":
+                        amount = int(amount)
+                        player.bet(amount)
+                        self.current_bet = amount
+                        self.pot.add(amount)
+                        player.status = "bet"
+                        break
+                    elif action == "check":
+                        player.check()
+                        player.status = "check"
+                        break
+                    elif action == "fold":
+                        player.fold()
+                        player.status = "fold"
+                        break
+                    elif action == "call":
+                        player.call(self.current_bet)
+                        self.pot.add(self.current_bet)
+                        player.status = "call"
+                        break
+                    elif action == "raise":
+                        amount = int(amount)
+                        player.raise_bet(self.current_bet + amount)
+                        self.pot.add(self.current_bet + amount)
+                        self.current_bet += amount
+                        player.status = "raise"
+                        break
+                    else:
+                        raise ValueError("Invalid action.")
+                except ValueError as e:
+                    print(e)
+                    continue
             if self.check_player_status():
                 break
 
-        for player in self.players:
-            if player.status in ["bet", "call", "raise", "fold"]:
-                continue
-            if self.check_player_status():
-                break
-            
-        self.reset_players_status()
+        # Si un joueur a misé ou relancé
+        if any(player.status in ["bet", "raise"] for player in self.players if player.in_game):
+            for player in self.players:
+                if player.status in ["call", "raise", "fold"]:
+                    continue  # Passer les joueurs qui ont déjà pris une action appropriée
+                if player.status == "bet":
+                    for other_player in self.players:
+                        if other_player != player and other_player.in_game:
+                            while True:
+                                action, amount = get_user_action()
+                                try:
+                                    if action == "call":
+                                        other_player.call(self.current_bet)
+                                        self.pot.add(self.current_bet)
+                                        other_player.status = "call"
+                                        break
+                                    elif action == "raise":
+                                        amount = int(amount)
+                                        other_player.raise_bet(self.current_bet + amount)
+                                        self.pot.add(self.current_bet + amount)
+                                        self.current_bet += amount
+                                        other_player.status = "raise"
+                                        break
+                                    elif action == "fold":
+                                        other_player.fold()
+                                        other_player.status = "fold"
+                                        break
+                                    else:
+                                        raise ValueError("Invalid action.")
+                                except ValueError as e:
+                                    print(e)
+                                    continue
+                    return False
+
+        return False
 
     def reset_current_bet(self):
         self.current_bet = 0
@@ -208,6 +247,7 @@ class Party:
         self.dealer = Dealer()
     
     def start(self):
+        self.load_card_images()
         preflop = PreFlop(self.dealer, self.players)
         print("Preflop")
         self.display_hands()
@@ -236,8 +276,11 @@ class Party:
         self.compare_hands()
         
     def display_hands(self):
-        for player in self.players:
-            print(player)
+        for i, player in enumerate(self.players):
+            for j, card_image in enumerate(self.player_card_images[i]):
+                screen.blit(card_image, (100 + j * 110, 100 + i * 170))
+        pygame.display.flip()
+        pygame.time.wait(2000)  # Wait for 2 seconds to display the cards
         print(self.pot)
 
     def display_community_cards(self):
@@ -267,8 +310,20 @@ class Party:
         winner.chips += self.pot.amount
         print(f"{winner.name} wins!")
 
+    def load_card_images(self):
+        def load_card_image(card):
+            image_path = f'Assets/{card.image_name()}'
+            return pygame.image.load(image_path)
+
+        self.player_card_images = []
+        for player in self.players:
+            self.player_card_images.append([load_card_image(card) for card in player.hand.cards])
+
+        # Resize card images if necessary
+        new_width, new_height = 100, 150
+        self.player_card_images = [[pygame.transform.scale(img, (new_width, new_height)) for img in hand_images] for hand_images in self.player_card_images]
+
 # Initialisation des joueurs et début de la partie
 player_names = ["Player 1", "Player 2"]
 game = Party(player_names)
 game.start()
-
