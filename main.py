@@ -247,8 +247,10 @@ class Party:
         self.dealer = Dealer()
     
     def start(self):
-        self.load_card_images()
         preflop = PreFlop(self.dealer, self.players)
+        print("Starting the game...")  # Ajout d'un message de débogage
+        self.load_card_images()
+        print("Cards loaded!")  # Ajout d'un message de débogage
         print("Preflop")
         self.display_hands()
         self.betting_round()
@@ -276,12 +278,18 @@ class Party:
         self.compare_hands()
         
     def display_hands(self):
+        screen.fill((0, 105, 0))  # Fond vert foncé pour l'affichage des cartes
         for i, player in enumerate(self.players):
+            print(f"Displaying cards for {player.name}")  # Debug
             for j, card_image in enumerate(self.player_card_images[i]):
-                screen.blit(card_image, (100 + j * 110, 100 + i * 170))
+                print(f"Displaying card {j+1} for {player.name}")  # Debug
+                if card_image:
+                    screen.blit(card_image, (100 + j * 110, 100 + i * 170))
+                else:
+                    print(f"Card image not found for {player.name}, card {j+1}")  # Debug
         pygame.display.flip()
         pygame.time.wait(2000)  # Wait for 2 seconds to display the cards
-        print(self.pot)
+        #print(self.pot)
 
     def display_community_cards(self):
         print(self.dealer.community_cards)
@@ -311,17 +319,42 @@ class Party:
         print(f"{winner.name} wins!")
 
     def load_card_images(self):
+        print("Loading card images...")  # Ajout d'un message de débogage
+
         def load_card_image(card):
             image_path = f'Assets/{card.image_name()}'
-            return pygame.image.load(image_path)
+            try:
+                image = pygame.image.load(image_path)
+                print(f"Loaded image: {image_path}")  # Debug
+                return image
+            except pygame.error as e:
+                print(f"Failed to load image {image_path}: {e}")
+                return None
 
         self.player_card_images = []
         for player in self.players:
-            self.player_card_images.append([load_card_image(card) for card in player.hand.cards])
+            player_images = []
+            for card in player.hand.cards:
+                img = load_card_image(card)
+                if img is not None:
+                    player_images.append(img)
+            self.player_card_images.append(player_images)
 
         # Resize card images if necessary
         new_width, new_height = 100, 150
-        self.player_card_images = [[pygame.transform.scale(img, (new_width, new_height)) for img in hand_images] for hand_images in self.player_card_images]
+        self.player_card_images = [[pygame.transform.scale(img, (new_width, new_height)) for img in hand_images if img] for hand_images in self.player_card_images]
+
+        # Debug: print player card images list
+        for i, hand_images in enumerate(self.player_card_images):
+            print(f"Player {i+1} card images: {hand_images}")
+
+class Card:
+    def __init__(self, rank, suit):
+        self.rank = rank
+        self.suit = suit
+    
+    def image_name(self):
+        return f"{self.rank}_of_{self.suit}.png"
 
 # Initialisation des joueurs et début de la partie
 player_names = ["Player 1", "Player 2"]
