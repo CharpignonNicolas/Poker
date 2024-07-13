@@ -12,8 +12,8 @@ class Card:
         self.rank = rank
 
     def __repr__(self):
-        return f"{self.rank} of {self.suit}"
+        return f"{self.rank} de_ {self.suit}"
 
     def image_name(self):
 
-        return f"{self.rank}_of_{self.suit}.png"
+        return f"{self.rank}_{self.suit}.png"
