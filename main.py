@@ -70,12 +70,12 @@ class Button:
                 return True
         return False
 
-def get_user_action():
-    input_box_bet = InputBox(200, 100, 100, 50, '', 'bet')
-    input_box_raise = InputBox(200, 200, 100, 50, '', 'raise')
-    button_check = Button(50, 300, 100, 50, "Check", pygame.Color('green'), "check")
-    button_fold = Button(50, 400, 100, 50, "Fold", pygame.Color('red'), "fold")
-    button_call = Button(50, 500, 100, 50, "Call", pygame.Color('blue'), "call")
+def get_user_action(player_index, players, card_images):
+    input_box_bet = InputBox(550, 400, 100, 50, '', 'bet')
+    input_box_raise = InputBox(550, 500, 100, 50, '', 'raise')
+    button_check = Button(50, 500, 100, 50, "Check", pygame.Color('green'), "check")
+    button_fold = Button(200, 500, 100, 50, "Fold", pygame.Color('red'), "fold")
+    button_call = Button(350, 500, 100, 50, "Call", pygame.Color('blue'), "call")
 
     input_boxes = [input_box_bet, input_box_raise]
     buttons = [button_check, button_fold, button_call]
@@ -97,6 +97,14 @@ def get_user_action():
 
         screen.fill((0, 105, 0))  # Fond vert foncé
 
+        # Afficher les cartes du joueur actif seulement
+        active_player = players[player_index]
+        for j, card_image in enumerate(card_images[player_index]):
+            screen.blit(card_image, (100 + j * 110, 100))
+        # Afficher les community cards
+        for i, card_image in enumerate(game.community_card_images):
+            screen.blit(card_image, (100 + i * 110, 300))
+
         for box in input_boxes:
             box.update()
             box.draw(screen)
@@ -106,6 +114,7 @@ def get_user_action():
 
         pygame.display.flip()
         clock.tick(30)
+
 
 class BettingRound:
     def __init__(self, players, pot, initial_bet=0):
@@ -130,11 +139,12 @@ class BettingRound:
         return False
     
     def round(self):
-        for player in self.players:
+        for idx, player in enumerate(self.players):
             if not player.in_game:
                 continue
+
             while True:
-                action, amount = get_user_action()
+                action, amount = get_user_action(idx, self.players, game.player_card_images)
                 try:
                     if action == "bet":
                         amount = int(amount)
@@ -180,7 +190,7 @@ class BettingRound:
                     for other_player in self.players:
                         if other_player != player and other_player.in_game:
                             while True:
-                                action, amount = get_user_action()
+                                action, amount = get_user_action(self.players, game.player_card_images)
                                 try:
                                     if action == "call":
                                         other_player.call(self.current_bet)
@@ -249,27 +259,35 @@ class Party:
     
     def start(self):
         preflop = PreFlop(self.dealer, self.players)
-        print("Starting the game...")  # Ajout d'un message de débogage
+        #print("Starting the game...")  # Ajout d'un message de débogage
         self.load_card_images()
-        print("Cards loaded!")  # Ajout d'un message de débogage
+        self.load_community_card_images()
+        #self.display_community_cards()
+
+
+        #print("Cards loaded!")  # Ajout d'un message de débogage
         print("Preflop")
         self.display_hands()
         self.betting_round()
         self.check_player_status()
 
         flop = Flop(self.dealer)
+        self.load_community_card_images()
         print("Flop")
-        self.display_community_cards()
+        #self.display_community_cards()
         self.betting_round()
         self.check_player_status()
 
         turn = Turn(self.dealer)
+        self.load_community_card_images()
+
         print("Turn")
         self.display_community_cards()
         self.betting_round()
         self.check_player_status()
 
         river = River(self.dealer)
+        self.load_community_card_images()
         print("River")
         self.display_community_cards()
         self.betting_round()
@@ -281,19 +299,21 @@ class Party:
     def display_hands(self):
         screen.fill((0, 105, 0))  # Fond vert foncé pour l'affichage des cartes
         for i, player in enumerate(self.players):
-            print(f"Displaying cards for {player.name}")  # Debug
+            #print(f"Displaying cards for {player.name}")  # Debug
             for j, card_image in enumerate(self.player_card_images[i]):
-                print(f"Displaying card {j+1} for {player.name}")  # Debug
+                #print(f"Displaying card {j+1} for {player.name}")  # Debug
                 if card_image:
                     screen.blit(card_image, (100 + j * 110, 100 + i * 170))
                 else:
                     print(f"Card image not found for {player.name}, card {j+1}")  # Debug
         pygame.display.flip()
-        pygame.time.wait(2000)  # Wait for 2 seconds to display the cards
-        #print(self.pot)
 
     def display_community_cards(self):
-        print(self.dealer.community_cards)
+        screen.fill((0, 105, 0))
+        for i, card_image in enumerate(self.community_card_images):
+            screen.blit(card_image, (100 + i * 110, 300))
+        pygame.display.flip()
+
     
     def betting_round(self):
         betting_round = BettingRound(self.players, self.pot)
@@ -320,8 +340,6 @@ class Party:
         print(f"{winner.name} wins!")
 
     def load_card_images(self):
-        print("Loading card images...")  # Ajout d'un message de débogage
-
         def load_card_image(card):
             image_path = f'Assets/{card.image_name()}'
             try:
@@ -349,13 +367,30 @@ class Party:
         for i, hand_images in enumerate(self.player_card_images):
             print(f"Player {i+1} card images: {hand_images}")
 
-class Card:
-    def __init__(self, rank, suit):
-        self.rank = rank
-        self.suit = suit
-    
-    def image_name(self):
-        return f"{self.rank}_of_{self.suit}.png"
+    def load_community_card_images(self):
+        def load_card_image(card):
+            image_path = f'Assets/{card.image_name()}'
+            try:
+                image = pygame.image.load(image_path)
+                print(f"Loaded image: {image_path}")  # Debug
+                return image
+            except pygame.error as e:
+                print(f"Failed to load image {image_path}: {e}")
+                return None
+            
+        self.community_card_images = []
+        for card in self.dealer.community_cards.cards:
+            img = load_card_image(card)
+            if img is not None:
+                self.community_card_images.append(img)
+        
+        # Resize card images if necessary
+        new_width, new_height = 100, 150
+        self.community_card_images = [pygame.transform.scale(img, (new_width, new_height)) for img in self.community_card_images]
+
+        # Debug: print community card images list
+        print(f"Community card images: {self.community_card_images}")
+
 
 # Initialisation des joueurs et début de la partie
 player_names = ["Player 1", "Player 2"]
