@@ -123,99 +123,100 @@ class BettingRound:
         self.current_bet = initial_bet
 
     def check_player_status(self):
-        for player in self.players:
-            if not player.in_game:
-                print(f"{player.name} folded. {player.name} loses.")
-                exit()
+        active_players = [player for player in self.players if player.in_game]
 
-        if all(player.status == "check" for player in self.players if player.in_game):
-            print("All players checked. End of the betting round.")
+        if len(active_players) == 1:
+            print(f"{active_players[0].name} wins by default!")
+            return True
+        
+        if all(player.status == "check" for player in active_players):
+            print("All active players checked. End of the betting round.")
             return True
 
-        if all(player.status == "fold" for player in self.players if player.in_game):
-            print("All players folded. End of the betting round.")
+        if all(player.status == "fold" for player in active_players):
+            print("All active players folded. End of the betting round.")
             return True
 
         return False
     
     def round(self):
-        for idx, player in enumerate(self.players):
-            if not player.in_game:
-                continue
-
-            while True:
-                action, amount = get_user_action(idx, self.players, game.player_card_images)
-                try:
-                    if action == "bet":
-                        amount = int(amount)
-                        player.bet(amount)
-                        self.current_bet = amount
-                        self.pot.add(amount)
-                        player.status = "bet"
-                        break
-                    elif action == "check":
-                        player.check()
-                        player.status = "check"
-                        break
-                    elif action == "fold":
-                        player.fold()
-                        player.status = "fold"
-                        break
-                    elif action == "call":
-                        player.call(self.current_bet)
-                        self.pot.add(self.current_bet)
-                        player.status = "call"
-                        break
-                    elif action == "raise":
-                        amount = int(amount)
-                        player.raise_bet(self.current_bet + amount)
-                        self.pot.add(self.current_bet + amount)
-                        self.current_bet += amount
-                        player.status = "raise"
-                        break
-                    else:
-                        raise ValueError("Invalid action.")
-                except ValueError as e:
-                    print(e)
+        while True:
+            for idx, player in enumerate(self.players):
+                if not player.in_game:
                     continue
-            if self.check_player_status():
-                break
 
-        # Si un joueur a misé ou relancé
-        if any(player.status in ["bet", "raise"] for player in self.players if player.in_game):
-            for player in self.players:
-                if player.status in ["call", "raise", "fold"]:
-                    continue  # Passer les joueurs qui ont déjà pris une action appropriée
-                if player.status == "bet":
-                    for other_player in self.players:
-                        if other_player != player and other_player.in_game:
-                            while True:
-                                action, amount = get_user_action(self.players, game.player_card_images)
-                                try:
-                                    if action == "call":
-                                        other_player.call(self.current_bet)
-                                        self.pot.add(self.current_bet)
-                                        other_player.status = "call"
-                                        break
-                                    elif action == "raise":
-                                        amount = int(amount)
-                                        other_player.raise_bet(self.current_bet + amount)
-                                        self.pot.add(self.current_bet + amount)
-                                        self.current_bet += amount
-                                        other_player.status = "raise"
-                                        break
-                                    elif action == "fold":
-                                        other_player.fold()
-                                        other_player.status = "fold"
-                                        break
-                                    else:
-                                        raise ValueError("Invalid action.")
-                                except ValueError as e:
-                                    print(e)
-                                    continue
-                    return False
+                while True:
+                    action, amount = get_user_action(idx, self.players, game.player_card_images)
+                    try:
+                        if action == "bet":
+                            amount = int(amount)
+                            player.bet(amount)
+                            self.current_bet = amount
+                            self.pot.add(amount)
+                            player.status = "bet"
+                            break
+                        elif action == "check":
+                            player.check()
+                            player.status = "check"
+                            break
+                        elif action == "fold":
+                            player.fold()
+                            player.status = "fold"
+                            break
+                        elif action == "call":
+                            player.call(self.current_bet)
+                            self.pot.add(self.current_bet)
+                            player.status = "call"
+                            break
+                        elif action == "raise":
+                            amount = int(amount)
+                            player.raise_bet(self.current_bet + amount)
+                            self.pot.add(self.current_bet + amount)
+                            self.current_bet += amount
+                            player.status = "raise"
+                            break
+                        else:
+                            raise ValueError("Invalid action.")
+                    except ValueError as e:
+                        print(e)
+                        continue
 
-        return False
+                if self.check_player_status():
+                    return  # Terminer le tour si les conditions sont remplies
+
+            # Si une mise ou une relance a été effectuée, les autres joueurs doivent réagir
+            if any(player.status in ["bet", "raise"] for player in self.players if player.in_game):
+                for player in self.players:
+                    if player.status in ["call", "raise", "fold"]:
+                        continue  # Passer les joueurs qui ont déjà pris une action appropriée
+
+                    while True:
+                        action, amount = get_user_action(self.players.index(player), self.players, game.player_card_images)
+                        try:
+                            if action == "call":
+                                player.call(self.current_bet)
+                                self.pot.add(self.current_bet)
+                                player.status = "call"
+                                break
+                            elif action == "raise":
+                                amount = int(amount)
+                                player.raise_bet(self.current_bet + amount)
+                                self.pot.add(self.current_bet + amount)
+                                self.current_bet += amount
+                                player.status = "raise"
+                                break
+                            elif action == "fold":
+                                player.fold()
+                                player.status = "fold"
+                                break
+                            else:
+                                raise ValueError("Invalid action.")
+                        except ValueError as e:
+                            print(e)
+                            continue
+
+                if self.check_player_status():
+                    return  # Terminer le tour si les conditions sont remplies
 
     def reset_current_bet(self):
         self.current_bet = 0
@@ -241,6 +242,7 @@ class BettingRound:
         self.reset_players_in_game()
         self.reset_pot()
         self.reset_players_status()
+
 
 from Players.player import Player
 from dealer import Dealer
